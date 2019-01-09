@@ -1,6 +1,6 @@
 #
 # BBP Formula implementation - multiprocess version
-# Modulus optimized - using...
+# Modulus optimized - using pow(a,b,c)
 #
 
 import math
@@ -25,7 +25,8 @@ class S_A (multiprocessing.Process):
     def calc(self):
         S_A = 0
         for k in range(0,self.n+1):
-            num = 16**(self.n-k) % (8*k + self.coeff)
+            # Modulus using exponentiation
+            num = pow(16,self.n-k,8*k + self.coeff)
             den = 8*k + self.coeff
             S_A += num / den
 
