@@ -1,3 +1,7 @@
+#
+# BBP Formula implementation - multiprocess version
+#
+
 import math
 import multiprocessing
 import time
