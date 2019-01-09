@@ -1,3 +1,6 @@
+#
+# BBP Formula implementation
+#
 import math
 import time
 import sys
