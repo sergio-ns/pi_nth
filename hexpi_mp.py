@@ -1,5 +1,6 @@
 #
 # BBP Formula implementation - multiprocess version
+# Modulus optimized
 #
 
 import math
