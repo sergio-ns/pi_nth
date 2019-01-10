@@ -12,6 +12,8 @@
    TODO: 
    - Optmize mod using exponentiation
    - Add performance over 10000 digits in the header as a reference
+   - Enhance parallelization using Pool to bind processes to different CPU cores
+   - Unify S_A and S_B using an extra parameter
    
 """
 
@@ -20,21 +22,31 @@ import multiprocessing
 import time
 import sys
 
+# number of terms to be calculated in the second term of the summation which is supposed to summate over infinite
+# it is a rapidly converging series and the contribution to the overall result is minimal so TERMS = 5 is a good choice
 TERMS = 5
 
 class S_A (multiprocessing.Process):
     """ Class used to implement one of the two generic terms in the formula.
         This one comes in the form:
-        Sum for k in range 0 to n of:
+
          n
         ---    n-k
         \     16   mod (8k+coeff)
-        /     --------------------
+        /    ---------------------
         ---         8k + coeff
         k=0
         where coeff can be one of: 1,4,5,6
+        
+        Subclassed from Process in order to implement parallelization
     """
     def __init__(self, queue, name, n, coeff):
+        """ Constructor of the class:
+            queue : object used to deliver the final result after the calculation completes and the process is destroyed
+            name  : name of the process, for diagnostic purposes
+            n     : number of required digits
+            coeff : coefficient used in the formula
+        """
         multiprocessing.Process.__init__(self)
         self.name = name
         self.n = n
@@ -42,10 +54,14 @@ class S_A (multiprocessing.Process):
         self.queue = queue
     
     def run(self):
+         """ Process method that start the execution
+         """
         self.queue.put(self.calc())
 
         
     def calc(self):
+         """ Performs the actual calculation of the term
+         """
         S_A = 0
         for k in range(0,self.n+1):
             num = 16**(self.n-k) % (8*k + self.coeff)
@@ -55,10 +71,28 @@ class S_A (multiprocessing.Process):
         return S_A
 
 class S_B (S_A):
+    """ Class used to implement the second one of the two generic terms in the formula.
+        This one comes in the form:
+
+         ∞
+        ---                n-k
+        \               16 
+        /     --------------------
+        ---         8k + coeff
+        k=n+1
+        where coeff can be one of: 1,4,5,6
+        
+        Subclassed from S_A as the only thing that is different is S_B
+        As a matter of fact, the two classes could be combined into one 
+        because the computation of S_B is orders of magnitude faster than S_A
+        and there is no point in parallelizing its calculation
+    """
     def __init__(self, queue, name, n, coeff):
         S_A.__init__(self, queue, name, n, coeff)
        
     def calc(self):
+      """ Performs the actual calculation of the term
+      """
         S_B = 0
         for k in range(self.n+1,self.n+TERMS+2):
             num = 16**(self.n-k)
