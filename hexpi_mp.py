@@ -13,7 +13,7 @@
    - Optmize mod using exponentiation
    - Add performance over 10000 digits in the header as a reference
    - Enhance parallelization using Pool to bind processes to different CPU cores
-   - Unify S_A and S_B using an extra parameter
+   - Unify S_A and S_B
    
 """
 
@@ -54,14 +54,15 @@ class S_A (multiprocessing.Process):
         self.queue = queue
     
     def run(self):
-         """ Process method that start the execution
-         """
+        """
+        Process method that start the execution
+        """
         self.queue.put(self.calc())
 
         
     def calc(self):
-         """ Performs the actual calculation of the term
-         """
+        """ Performs the actual calculation of the term
+        """
         S_A = 0
         for k in range(0,self.n+1):
             num = 16**(self.n-k) % (8*k + self.coeff)
@@ -91,8 +92,8 @@ class S_B (S_A):
         S_A.__init__(self, queue, name, n, coeff)
        
     def calc(self):
-      """ Performs the actual calculation of the term
-      """
+        """ Performs the actual calculation of the term
+        """
         S_B = 0
         for k in range(self.n+1,self.n+TERMS+2):
             num = 16**(self.n-k)
