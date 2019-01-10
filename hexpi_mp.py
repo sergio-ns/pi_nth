@@ -1,6 +1,19 @@
-#
-# BBP Formula implementation - multiprocess version
-#
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""BBP Formula implementation
+   It calculates the n-th digit of PI in hexadecimal base
+   Ref: https://en.wikipedia.org/wiki/Bailey%E2%80%93Borwein%E2%80%93Plouffe_formula
+   
+   This is the multi-process implementation of the formula
+
+   Author: Sergio N.
+   Date: January 2019
+   TODO: 
+   - Optmize mod using exponentiation
+   - Add performance over 10000 digits in the header as a reference
+   
+"""
 
 import math
 import multiprocessing
@@ -10,6 +23,17 @@ import sys
 TERMS = 5
 
 class S_A (multiprocessing.Process):
+    """ Class used to implement one of the two generic terms in the formula.
+        This one comes in the form:
+        Sum for k in range 0 to n of:
+         n
+        ---    n-k
+        \     16   mod (8k+coeff)
+        /     --------------------
+        ---         8k + coeff
+        k=0
+        where coeff can be one of: 1,4,5,6
+    """
     def __init__(self, queue, name, n, coeff):
         multiprocessing.Process.__init__(self)
         self.name = name
