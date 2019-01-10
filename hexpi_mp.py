@@ -7,10 +7,18 @@
    Author: Sergio N.
    Date: January 2019
    TODO: 
-   - Optmize mod using exponentiation
-   - Add performance over 10000 digits in the header as a reference
    - Enhance parallelization using Pool to bind processes to different CPU cores
-   - Unify S_A and S_B
+
+   Performance:
+   1000     ~  145ms
+   5000     ~  150ms
+   10000    ~  154ms
+   20000    ~  168ms
+   50000    ~  215ms
+   100000   ~  305ms
+   200000   ~  500ms
+   500000   ~ 1090ms
+   1000000  ~ 2012ms
    
 """
 
@@ -23,31 +31,39 @@ import sys
 # it is a rapidly converging series and the contribution to the overall result is minimal so TERMS = 5 is a good choice
 TERMS = 5
 
-class S_A (multiprocessing.Process):
-    """ Class used to implement one of the two generic terms in the formula.
-        This one comes in the form:
+class S (multiprocessing.Process):
+    """ Class used to calculate each term in the main sum of the formula,
+        which can be expressed as:
 
          n
-        ---    n-k
+        ---     n-k
         \     16   mod (8k+coeff)
-        /    ---------------------
+        /    ---------------------        +
         ---         8k + coeff
         k=0
-        where coeff can be one of: 1,4,5,6
+
+         ∞
+        ---              n-k
+        \              16 
+        /     --------------------
+        ---         8k + coeff
+        k=n+1
+
+        where alpha can be one of: 1,4,5,6
         
         Subclassed from Process in order to implement parallelization
     """
-    def __init__(self, queue, name, n, coeff):
+    def __init__(self, queue, name, n, alpha):
         """ Constructor of the class:
             queue : object used to deliver the final result after the calculation completes and the process is destroyed
             name  : name of the process, for diagnostic purposes
             n     : number of required digits
-            coeff : coefficient used in the formula
+            alpha : coefficient used in the formula
         """
         multiprocessing.Process.__init__(self)
         self.name = name
         self.n = n
-        self.coeff = coeff
+        self.alpha = alpha
         self.queue = queue
     
     def run(self):
@@ -60,105 +76,58 @@ class S_A (multiprocessing.Process):
     def calc(self):
         """ Performs the actual calculation of the term
         """
-        S_A = 0
+        S_res = 0
         for k in range(0,self.n+1):
             # Modulus using exponentiation
-            num = pow(16,self.n-k,8*k + self.coeff)
-            den = 8*k + self.coeff
-            S_A += num / den
+            num = pow(16,self.n-k,8*k + self.alpha)
+            den = 8*k + self.alpha
+            S_res += num / den
 
-        return S_A
-
-class S_B (S_A):
-    """ Class used to implement the second one of the two generic terms in the formula.
-        This one comes in the form:
-
-         ∞
-        ---                n-k
-        \               16 
-        /     --------------------
-        ---         8k + coeff
-        k=n+1
-        where coeff can be one of: 1,4,5,6
-        
-        Subclassed from S_A as the only thing that is different is S_B
-        As a matter of fact, the two classes could be combined into one 
-        because the computation of S_B is orders of magnitude faster than S_A
-        and there is no point in parallelizing its calculation
-    """
-    def __init__(self, queue, name, n, coeff):
-        S_A.__init__(self, queue, name, n, coeff)
-       
-    def calc(self):
-        """ Performs the actual calculation of the term
-        """
-        S_B = 0
         for k in range(self.n+1,self.n+TERMS+2):
             num = 16**(self.n-k)
-            den = 8*k + self.coeff
-            S_B += num / den
+            den = 8*k + self.alpha
+            S_res += num / den
 
-        return S_B  
+        return S_res
+
 
     
 def main_mp(n):
     
     n-=1
     jobs = []
-    q_A1 = multiprocessing.Queue()
-    S_A1 = S_A(q_A1,'S_A1',n,1)
+    q_1 = multiprocessing.Queue()
+    S_1 = S(q_1,'S_1',n,1)
 
-    q_B1 = multiprocessing.Queue()
-    S_B1 = S_B(q_B1,'S_B1',n,1)
+    q_4 = multiprocessing.Queue()
+    S_4 = S(q_4,'S_4',n,4)
     
-    q_A4 = multiprocessing.Queue()
-    S_A4 = S_A(q_A4,'S_A4',n,4)
+    q_5 = multiprocessing.Queue()
+    S_5 = S(q_5,'S_5',n,5)
 
-    q_B4 = multiprocessing.Queue()
-    S_B4 = S_B(q_B4,'S_B4',n,4)
+    q_6 = multiprocessing.Queue()
+    S_6 = S(q_6,'S_6',n,6)
+
+
+    jobs.append(S_1)
+    S_1.start()
+
+    jobs.append(S_4)
+    S_4.start()
+
+    jobs.append(S_5)
+    S_5.start()
     
-    q_A5 = multiprocessing.Queue()
-    S_A5 = S_A(q_A5,'S_A5',n,5)
-
-    q_B5 = multiprocessing.Queue()
-    S_B5 = S_B(q_B5,'S_B5',n,5)
+    jobs.append(S_6)
+    S_6.start()
     
-    q_A6 = multiprocessing.Queue()
-    S_A6 = S_A(q_A6,'S_A6',n,6)
-
-    q_B6 = multiprocessing.Queue()
-    S_B6 = S_B(q_B6,'S_B6',n,6)
-
-    jobs.append(S_A1)
-    S_A1.start()
-
-    jobs.append(S_B1)
-    S_B1.start()
-
-    jobs.append(S_A4)
-    S_A4.start()
-
-    jobs.append(S_B4)
-    S_B4.start()
-    
-    jobs.append(S_A5)
-    S_A5.start()
-    
-    jobs.append(S_B5)
-    S_B5.start()
-    
-    jobs.append(S_A6)
-    S_A6.start()
-    
-    jobs.append(S_B6)
-    S_B6.start()
 
     # Wait for all threads to complete
     for j in jobs:
       j.join()
 
     # get all outputs and perform final calculation
-    p1 = 4 * (q_A1.get() + q_B1.get()) - 2 * (q_A4.get() + q_B4.get()) - (q_A5.get() + q_B5.get()) - (q_A6.get() + q_B6.get()) 
+    p1 = 4 * q_1.get()  - 2 * q_4.get()  - q_5.get() - q_6.get()
 
     p2 = p1 - math.floor(p1)
 
