@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """BBP Formula implementation
    It calculates the n-th digit of PI in hexadecimal base
    Ref: https://en.wikipedia.org/wiki/Bailey%E2%80%93Borwein%E2%80%93Plouffe_formula
@@ -65,7 +62,8 @@ class S_A (multiprocessing.Process):
         """
         S_A = 0
         for k in range(0,self.n+1):
-            num = 16**(self.n-k) % (8*k + self.coeff)
+            # Modulus using exponentiation
+            num = pow(16,self.n-k,8*k + self.coeff)
             den = 8*k + self.coeff
             S_A += num / den
 

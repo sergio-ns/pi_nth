@@ -1,5 +1,6 @@
 #
 # BBP Formula implementation
+# Modulus optimized - using pow(a,b,c)
 #
 import math
 import time
@@ -11,7 +12,8 @@ def Sa_n (n,coeff):
 
     Sa = 0
     r = range(0,n+1)
-    l = list(map(lambda k: (16**(n-k) % (8*k + coeff)) / (8*k + coeff) ,r))
+    #l = list(map(lambda k: (16**(n-k) % (8*k + coeff)) / (8*k + coeff) ,r))
+    l = list(map(lambda k: pow(16,n-k,8*k+coeff) / (8*k + coeff) ,r))
     Sa = sum(l)
 
     #for k in range(0,n+1):
