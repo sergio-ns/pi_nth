@@ -39,14 +39,14 @@ class S (multiprocessing.Process):
         ---     n-k
         \     16   mod (8k+coeff)
         /    ---------------------        +
-        ---         8k + coeff
+        ---         8k + alpha
         k=0
 
          ∞
         ---              n-k
         \              16 
         /     --------------------
-        ---         8k + coeff
+        ---         8k + alpha
         k=n+1
 
         where alpha can be one of: 1,4,5,6
