@@ -27,7 +27,7 @@ import multiprocessing
 import time
 import sys
 
-# number of terms to be calculated in the second term of the summation which is supposed to summate over infinite
+# number of terms to be calculated in the second addend of the summation which is supposed to summate over infinite
 # it is a rapidly converging series and the contribution to the overall result is minimal so TERMS = 5 is a good choice
 TERMS = 5
 
